@@ -157,7 +157,7 @@ const CARDIO = {
 };
 
 // ---------- STATE ----------
-let db=null, sessions=[], editingId=null, currentDay="A";
+let db=null, sessions=[], editingId=null, currentDay="A", progDay="A";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 
@@ -328,16 +328,32 @@ function lineChart(svg, series, opts={}){
   });
   svg.innerHTML=g;
 }
+function sparkline(svg,pts){
+  const W=360,H=70,L=8,R=36,T=8,B=8;svg.innerHTML="";
+  if(!pts.length){svg.innerHTML=`<line class="grid" x1="${L}" x2="${W-R}" y1="${H/2}" y2="${H/2}" stroke-dasharray="3 5"/>`;return}
+  let lo=Math.min(...pts.map(p=>p.y)),hi=Math.max(...pts.map(p=>p.y));if(hi===lo){hi+=5;lo-=5}
+  const X=i=>L+(pts.length===1?(W-L-R)/2:i*(W-L-R)/(pts.length-1)),Y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  const xy=pts.map((p,i)=>[X(i),Y(p.y)]);const d=xy.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  let g=`<line class="grid" x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}"/>`;
+  if(xy.length>1)g+=`<path class="a1" d="${d} L${xy[xy.length-1][0]} ${H-B} L${xy[0][0]} ${H-B} Z"/><path class="l1" d="${d}"/>`;
+  const e=xy[xy.length-1];g+=`<circle class="p1" cx="${e[0]}" cy="${e[1]}" r="4"/><text x="${e[0]+8}" y="${e[1]+4}">${pts[pts.length-1].y}</text>`;
+  svg.innerHTML=g;
+}
 function renderProgress(){
   const sorted=[...sessions].sort((a,b)=>a.date<b.date?-1:1);
-  const names=Object.keys(EX).filter(n=>sorted.some(s=>s.exercises&&s.exercises[n]&&s.exercises[n].some(x=>x.w!=null)));
-  const pick=$("#exPick");const cur=pick.value;
-  const rest=Object.keys(EX).filter(n=>!names.includes(n));
-  const opt=n=>`<option ${n===cur?"selected":""}>${n}</option>`;
-  pick.innerHTML=(names.length?`<optgroup label="Logged">${names.map(opt).join("")}</optgroup>`:"")+`<optgroup label="${names.length?"Not logged yet":"All exercises"}">${rest.map(opt).join("")}</optgroup>`;
-  if(!cur||!EX[cur])pick.value=names[0]||"Leg Press";
-  const ex=pick.value;
-  lineChart($("#chExercise"),[{pts:sorted.filter(s=>s.exercises&&s.exercises[ex]).map(s=>({x:s.date,y:Math.max(...s.exercises[ex].map(x=>x.w??-1))})).filter(p=>p.y>=0)}]);
+  $$("#progSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.day===progDay?"true":"false"));
+  $("#progList").innerHTML=DAYS[progDay].ex.map(ex=>{
+    const pts=sorted.filter(s=>s.exercises&&s.exercises[ex]).map(s=>({x:s.date,y:Math.max(...s.exercises[ex].map(x=>x.w??-1))})).filter(p=>p.y>=0);
+    const unit=EX[ex].timed?"sec":"lb";
+    let badge='<span class="pill">not logged yet</span>', nums="";
+    if(pts.length){const first=pts[0].y,last=pts[pts.length-1].y,d=last-first;
+      badge=d>0?`<span class="pill good">+${d} ${unit}</span>`:d<0?`<span class="pill warn">${d} ${unit}</span>`:`<span class="pill accent">holding</span>`;
+      nums=`<span class="note gl">${first} → <b>${last} ${unit}</b> · ${pts.length} session${pts.length>1?"s":""}</span>`}
+    return `<div class="prow"><div class="row" style="justify-content:space-between"><div class="name">${ex}</div>${badge}</div>${nums}<svg class="chart spark" viewBox="0 0 360 70" data-ex="${ex}"></svg></div>`;
+  }).join("");
+  $$("#progList svg.spark").forEach(svg=>{const ex=svg.dataset.ex;
+    const pts=sorted.filter(s=>s.exercises&&s.exercises[ex]).map(s=>({x:s.date,y:Math.max(...s.exercises[ex].map(x=>x.w??-1))})).filter(p=>p.y>=0);
+    sparkline(svg,pts)});
   const weeks={};sorted.forEach(s=>{const k=weekKey(s.date);weeks[k]=(weeks[k]||0)+cardioMin(s)});
   lineChart($("#chCardio"),[{pts:Object.keys(weeks).sort().map(k=>({x:k,y:weeks[k]}))}],{bars:true,zero:true,target:300});
   lineChart($("#chGlucose"),[{pts:sorted.filter(s=>s.gPre!=null).map(s=>({x:s.date,y:s.gPre}))},{pts:sorted.filter(s=>s.gPost!=null).map(s=>({x:s.date,y:s.gPost}))}]);
@@ -367,7 +383,7 @@ $("#histList").addEventListener("click",e=>{
   if(ed){const s=sessions.find(x=>x.id===ed.dataset.edit);fillForm(s);$$("nav.tabs button")[0].click()}
   if(de){if(de.textContent==="Sure?")remove(de.dataset.del);else{de.textContent="Sure?";setTimeout(()=>de.textContent="Delete",2500)}}
 });
-$("#exPick").addEventListener("change",renderProgress);
+$("#progSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(b){progDay=b.dataset.day;renderProgress()}});
 
 sessions=lsLoad();
 renderGuide();fillForm(null);renderHistory();renderProgress();

@@ -126,12 +126,16 @@
 <section class="view" id="view-progress">
   <div class="stack">
     <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <h3>Strength</h3>
-        <select id="exPick" style="width:auto"></select>
+      <h3>Strength by day</h3>
+      <div class="seg" id="progSeg" style="margin-top:8px">
+        <button type="button" data-day="A" aria-pressed="true"><b>A</b><span>Chest</span></button>
+        <button type="button" data-day="B" aria-pressed="false"><b>B</b><span>Legs</span></button>
+        <button type="button" data-day="C" aria-pressed="false"><b>C</b><span>Back</span></button>
+        <button type="button" data-day="D" aria-pressed="false"><b>D</b><span>Shoulders</span></button>
+        <button type="button" data-day="E" aria-pressed="false"><b>E</b><span>Legs 2</span></button>
       </div>
-      <p class="note" style="margin:4px 0 8px">Heaviest set each session. A line that climbs slowly and steadily is the goal.</p>
-      <svg class="chart" id="chExercise" viewBox="0 0 360 180"></svg>
+      <p class="note" style="margin:8px 0 4px">Heaviest set each session for every lift on that day. A line that climbs slowly and steadily is the goal.</p>
+      <div id="progList"></div>
     </div>
     <div class="card">
       <h3>Cardio minutes per week</h3>

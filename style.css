@@ -147,3 +147,7 @@ th{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mu
 .gl{font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 @media (max-width:420px){.g3{grid-template-columns:1fr 1fr}.ex .pic{width:78px;height:54px}.ex .pic svg{width:70px;height:48px}}
+.prow{border-top:1px solid var(--line);padding:10px 0 4px}
+.prow:first-child{border-top:0}
+.prow .name{font-family:var(--display);font-size:1.05rem;font-weight:700}
+.prow .spark{margin-top:4px}

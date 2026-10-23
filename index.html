@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f6e63">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Training Log">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="icon" href="./icon-192.png">
+<style>html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>IB Training Log</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: a phone-first logbook. One sticky tab bar at the bottom, one scrolling column, cards only around the thing being filled in. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --fg:#17201f; --muted:#5f6b69; --line:#d9ddd9;
+  --accent:#0f6e63; --accent-ink:#ffffff; --accent-soft:#dcefeb;
+  --good:#2f7d32; --warn:#b26a00; --bad:#b3261e; --warn-soft:#fff2dc; --bad-soft:#fde6e4; --good-soft:#e3f2e1;
+  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
+  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#121816; --surface:#1b2321; --fg:#e8ebe8; --muted:#9aa5a2; --line:#2e3936;
+  --accent:#4fc3b2; --accent-ink:#0b1513; --accent-soft:#1d3a36;
+  --good:#7ed083; --warn:#f2b35b; --bad:#f08a82; --warn-soft:#3a2b10; --bad-soft:#3d1c19; --good-soft:#1c3320;
+  color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#121816; --surface:#1b2321; --fg:#e8ebe8; --muted:#9aa5a2; --line:#2e3936;
+  --accent:#4fc3b2; --accent-ink:#0b1513; --accent-soft:#1d3a36;
+  --good:#7ed083; --warn:#f2b35b; --bad:#f08a82; --warn-soft:#3a2b10; --bad-soft:#3d1c19; --good-soft:#1c3320;
+  color-scheme:dark }
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(120px + env(safe-area-inset-bottom,0px))}
+html{scroll-padding-bottom:120px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.05}
+h1{font-size:2rem;font-weight:700;letter-spacing:.01em}
+h2{font-size:1.5rem;font-weight:700}
+h3{font-size:1.15rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+p{margin:0}
+.wrap{max-width:640px;margin:0 auto}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:18px 0 10px;border-bottom:2px solid var(--fg)}
+header.top .sub{color:var(--muted);font-size:.9rem}
+.view{display:none;padding-top:14px}
+.view.active{display:block}
+.stack{display:grid;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+label{font-size:.85rem;color:var(--muted);font-weight:500;display:block;margin-bottom:4px}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-variant-numeric:tabular-nums}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:10px 14px;font-weight:600}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.small{padding:6px 10px;font-size:.85rem}
+button.ghost{background:transparent}
+button:disabled{opacity:.5;cursor:default}
+.seg{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.seg button{padding:10px 2px;font-family:var(--display);font-size:.95rem;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.check{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
+.check:first-of-type{border-top:0}
+.check input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--accent);flex:none}
+.check .t{font-weight:500}
+.check .d{color:var(--muted);font-size:.9rem}
+.ex{border-top:1px solid var(--line);padding:12px 0}
+.ex:first-of-type{border-top:0;padding-top:0}
+.ex .head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.ex .name{font-family:var(--display);font-size:1.25rem;font-weight:700}
+.ex .target{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.ex .last{font-size:.85rem;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+.sets{display:grid;gap:6px;margin-top:8px}
+.set{display:grid;grid-template-columns:2.2rem 1fr auto 1fr auto;gap:6px;align-items:center}
+.set .n{font-family:var(--display);font-size:1.1rem;color:var(--muted);text-align:center}
+.set .x{color:var(--muted);font-size:.85rem}
+.set input{padding:8px 8px;text-align:center}
+.set .done{width:34px;height:38px;padding:0;font-size:1.1rem}
+.set .done[aria-pressed=true]{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+details{margin-top:6px}
+summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:.9rem;list-style:none}
+summary::before{content:"+ ";font-weight:700}
+details[open] summary::before{content:"\2212 "}
+.cues{margin:6px 0 0;padding-left:18px;font-size:.92rem}
+.cues li{margin:3px 0}
+.machine{font-size:.92rem;color:var(--muted);margin-top:6px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;font-weight:600;border:1px solid var(--line);color:var(--muted);background:var(--bg)}
+.pill.good{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.accent{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.note{font-size:.9rem;color:var(--muted)}
+.banner{border-radius:8px;padding:10px 12px;font-size:.92rem;background:var(--warn-soft);color:var(--fg);border-left:4px solid var(--warn)}
+.banner.good{background:var(--good-soft);border-left-color:var(--good)}
+.banner.bad{background:var(--bad-soft);border-left-color:var(--bad)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20;max-width:90vw}
+.toast.show{opacity:1}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+nav.tabs button{border:0;border-radius:0;background:transparent;padding:10px 4px 8px;font-family:var(--display);font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-top:3px solid transparent}
+nav.tabs button[aria-selected=true]{color:var(--accent);border-top-color:var(--accent)}
+/* history */
+.hist{display:grid;gap:8px}
+.hrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.hrow .d{font-family:var(--display);font-size:1.3rem;font-weight:700;width:3.2rem;text-align:center;line-height:1}
+.hrow .d small{display:block;font-size:.7rem;font-family:var(--body);color:var(--muted);text-transform:uppercase;font-weight:600}
+.hrow .m{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.hrow .m b{color:var(--fg)}
+/* charts */
+.chart{width:100%;height:auto;display:block}
+.chart text{font-family:var(--body);font-size:11px;fill:var(--muted)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .l1{stroke:var(--accent);stroke-width:2.5;fill:none;stroke-linejoin:round}
+.chart .l2{stroke:var(--warn);stroke-width:2.5;fill:none;stroke-linejoin:round}
+.chart .a1{fill:var(--accent);opacity:.12}
+.chart .p1{fill:var(--accent)}
+.chart .p2{fill:var(--warn)}
+.chart .bar{fill:var(--accent)}
+.chart .target{stroke:var(--good);stroke-dasharray:4 4;stroke-width:1.5}
+.legend{display:flex;gap:14px;font-size:.85rem;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:12px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
+.stat b{display:block;font-family:var(--display);font-size:1.7rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+/* guide */
+.guide h2{margin-top:6px}
+.guide p,.guide li{max-width:65ch}
+.guide ul{padding-left:20px;margin:6px 0}
+.guide .week{display:grid;grid-template-columns:5.5rem 1fr;gap:8px 12px;font-size:.95rem}
+.guide .week b{font-family:var(--display);font-size:1.1rem}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.tscroll{overflow-x:auto}
+.gl{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+@media (max-width:420px){.g3{grid-template-columns:1fr 1fr}.set{grid-template-columns:2rem 1fr auto 1fr auto}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div><h1>IB Training Log</h1><div class="sub">Life Time Crosstown · 5 days a week · sauna, lift, ride, steam</div></div>
+  <span class="pill" id="syncPill">loading</span>
+</header>
+
+<!-- ============ TODAY ============ -->
+<section class="view active" id="view-today">
+  <div class="stack">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="eyebrow">Session</div>
+        <input type="date" id="sDate" style="width:auto">
+      </div>
+      <div style="margin-top:10px" class="seg" id="daySeg">
+        <button type="button" data-day="A" aria-pressed="true">A · Chest+Arms</button>
+        <button type="button" data-day="B" aria-pressed="false">B · Legs</button>
+        <button type="button" data-day="C" aria-pressed="false">C · Back</button>
+        <button type="button" data-day="D" aria-pressed="false">D · Shoulders</button>
+        <button type="button" data-day="E" aria-pressed="false">E · Legs 2</button>
+      </div>
+      <p class="note" id="dayNote" style="margin-top:8px"></p>
+      <div class="banner" id="nextUp" style="margin-top:10px" hidden></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Before you touch a weight</div>
+      <div class="g3" style="margin-top:8px">
+        <div><label for="gPre">Glucose before (mg/dL)</label><input type="number" id="gPre" inputmode="numeric" placeholder="e.g. 140"></div>
+        <div><label for="bw">Body weight (lb)</label><input type="number" id="bw" inputmode="decimal" step="0.1" placeholder="e.g. 210"></div>
+        <div><label for="sauna">Dry sauna (min)</label><input type="number" id="sauna" inputmode="numeric" placeholder="10"></div>
+      </div>
+      <div class="banner" id="glucoseMsg" style="margin-top:10px" hidden></div>
+      <h3 style="margin-top:14px">Mobility after sauna (8 to 10 min)</h3>
+      <div id="mobList"></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h3>Lifts</h3><span class="note">weight × reps · tap ✓ when the set is done</span>
+      </div>
+      <div id="exList" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h3>Cardio hour</h3>
+      <div id="cardioPlan" style="margin-top:8px"></div>
+      <p class="note" id="cardioNote" style="margin:8px 0 10px"></p>
+      <div class="g3">
+        <div><label for="bike">Bike (min)</label><input type="number" id="bike" inputmode="numeric" placeholder="60"></div>
+        <div><label for="stair">Stair climber (min)</label><input type="number" id="stair" inputmode="numeric" placeholder="0"></div>
+        <div><label for="tread">Treadmill (min)</label><input type="number" id="tread" inputmode="numeric" placeholder="0"></div>
+      </div>
+      <div class="g2" style="margin-top:10px">
+        <div><label for="other">Rower, fan bike, SkiErg or UBE (min)</label><input type="number" id="other" inputmode="numeric" placeholder="0"></div>
+        <div><label for="bikeType">Which bike</label><select id="bikeType"><option>Recumbent</option><option>Upright</option><option>Stages cycle</option></select></div>
+      </div>
+      <div class="g2" style="margin-top:10px">
+        <div><label for="rpe">Effort (1 easy to 10 max)</label><input type="number" id="rpe" inputmode="numeric" min="1" max="10" placeholder="5 or 6"></div>
+        <div><label for="level">Bike level or stair speed</label><input type="text" id="level" placeholder="e.g. L6 / 40 steps"></div>
+      </div>
+      <p class="note" id="cardioTotal" style="margin-top:8px"></p>
+    </div>
+
+    <div class="card">
+      <h3>After</h3>
+      <div class="g2" style="margin-top:8px">
+        <div><label for="gPost">Glucose after (mg/dL)</label><input type="number" id="gPost" inputmode="numeric" placeholder="e.g. 120"></div>
+        <div><label for="steam">Steam room (min)</label><input type="number" id="steam" inputmode="numeric" placeholder="10"></div>
+      </div>
+      <div style="margin-top:10px"><label for="notes">Notes (form wins, pain, energy, what to change next time)</label><textarea id="notes"></textarea></div>
+    </div>
+
+    <div class="card">
+      <h3>Daily habits from the research</h3>
+      <p class="note" style="margin:4px 0 6px">These two did as much in the trials as the workouts did. Tick them off today, gym day or not.</p>
+      <label class="check"><input type="checkbox" id="habProtein"><span><span class="t">Protein target hit (<span id="protTarget">about 150 g</span>)</span><br><span class="d">About 1.6 g per kg of body weight, spread over 3 to 4 meals, food first. Updates from the body weight you enter above.</span></span></label>
+      <label class="check"><input type="checkbox" id="habWalk"><span><span class="t">15 minute walk after the biggest meal</span><br><span class="d">The ADA's after-meal walk. On gym days it is optional; on off days it is the whole job.</span></span></label>
+      <label class="check"><input type="checkbox" id="habMeal"><span><span class="t">Protein meal within an hour after training</span><br><span class="d">Blunts the delayed glucose drop and feeds the muscle you just worked.</span></span></label>
+    </div>
+
+    <div class="row">
+      <button type="button" class="primary grow" id="saveBtn">Save session</button>
+      <button type="button" class="ghost" id="clearBtn">Clear</button>
+    </div>
+    <p class="note" id="editingNote" hidden></p>
+  </div>
+</section>
+
+<!-- ============ HISTORY ============ -->
+<section class="view" id="view-history">
+  <div class="stack">
+    <div class="stat" id="stats"></div>
+    <div class="hist" id="histList"></div>
+    <p class="note" id="histEmpty">No sessions yet. Your first saved workout will show up here.</p>
+    <div class="card">
+      <h3>Backup</h3>
+      <p class="note" style="margin:4px 0 10px">Your log lives on this phone only. Back it up now and then (it goes to your Files app or iCloud), and restore it here on a new phone.</p>
+      <div class="row"><button type="button" class="grow" id="exportBtn">Back up to a file</button><label class="grow" style="margin:0"><span class="pill accent" style="display:block;text-align:center;padding:10px;cursor:pointer;font-size:1rem">Restore from a file</span><input type="file" id="importFile" accept="application/json,.json" style="display:none"></label></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROGRESS ============ -->
+<section class="view" id="view-progress">
+  <div class="stack">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h3>Strength</h3>
+        <select id="exPick" style="width:auto"></select>
+      </div>
+      <p class="note" style="margin:4px 0 8px">Heaviest set each session. A line that climbs slowly and steadily is the goal.</p>
+      <svg class="chart" id="chExercise" viewBox="0 0 360 180"></svg>
+    </div>
+    <div class="card">
+      <h3>Cardio minutes per week</h3>
+      <p class="note" style="margin:4px 0 8px">Dashed line is the 300 minute target (5 sessions × 60). The ADA floor is 150.</p>
+      <svg class="chart" id="chCardio" viewBox="0 0 360 180"></svg>
+    </div>
+    <div class="card">
+      <h3>Glucose before and after</h3>
+      <svg class="chart" id="chGlucose" viewBox="0 0 360 180"></svg>
+      <div class="legend"><span><i style="background:var(--accent)"></i>before</span><span><i style="background:var(--warn)"></i>after</span></div>
+    </div>
+    <div class="card">
+      <h3>Body weight</h3>
+      <svg class="chart" id="chWeight" viewBox="0 0 360 180"></svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GUIDE ============ -->
+<section class="view guide" id="view-guide">
+  <div class="stack">
+    <div class="card">
+      <h2>How a session runs</h2>
+      <p style="margin-top:8px">Plan on about 2.5 hours. The order matters: heat, then mobility, then lifts while you are fresh, then the cardio hour, then steam.</p>
+      <table style="margin-top:10px">
+        <tr><th>Block</th><th>Time</th><th>What</th></tr>
+        <tr><td>Dry sauna</td><td>10 to 15 min</td><td>Drink 16 oz of water first. Get out early if dizzy.</td></tr>
+        <tr><td>Mobility</td><td>8 to 10</td><td>Hip flexor and core work from the checklist. Every session.</td></tr>
+        <tr><td>Lifts</td><td>45 to 55</td><td>Today's day (A to E). Rest 60 to 90 sec between sets, 2 min on the leg press and deadlifts.</td></tr>
+        <tr><td>Cardio</td><td>60</td><td>Today's aerobic session, written out on the Today tab. Mostly easy; one interval day a week.</td></tr>
+        <tr><td>Steam</td><td>10 to 15</td><td>Rehydrate. Check glucose before you go in if you feel off.</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Weekly plan</h2>
+      <p style="margin-top:8px">Five days, Monday to Friday, 2.5 hours each. Weekends off: that is when the muscle actually gets built. The cardio hour is in every session, which puts you at 300 minutes a week, double the ADA floor.</p>
+      <div class="week" style="margin-top:10px">
+        <b>Mon</b><span>Day A: chest and arms (machines and dumbbells), plus core</span>
+        <b>Tue</b><span>Day B: lower body on the machines, plus core</span>
+        <b>Wed</b><span>Day C: back, plus core</span>
+        <b>Thu</b><span>Day D: shoulders and arms with dumbbells, plus core</span>
+        <b>Fri</b><span>Day E: lower body with free weights and functional work, plus core</span>
+        <b>Sat</b><span>Off. 15 minute walk after the biggest meal.</span>
+        <b>Sun</b><span>Off. Same walk.</span>
+      </div>
+      <h3 style="margin-top:14px">Why the body is split this way</h3>
+      <p>Every muscle you train needs about 48 hours to repair and grow, and growing is where the blood sugar benefit comes from. The ADA's guidance is resistance work 2 to 3 days a week per muscle on non-consecutive days; five gym days are fine as long as no muscle is hit two days in a row. So the week rotates through body parts, each muscle gets two sessions (one heavy on machines, one lighter with free weights), and the cardio hour runs daily since it does not need the same recovery.</p>
+      <ul>
+        <li><b>Day A, chest and arms.</b> Machine press first for heavy, safe loading, then the dumbbell version to teach balance. Chest presses already work the triceps, so the arm work piggybacks on warm muscles. Small arm muscles go last so they do not give out before the big lifts.</li>
+        <li><b>Day B, lower body on machines.</b> Legs and glutes are the biggest muscles you have, which makes this the most important lifting day for glucose. Leg press first, then the single-joint machines. Heaviest loads of the week.</li>
+        <li><b>Day C, back.</b> Lats, upper back, rear shoulders, plus a one-arm dumbbell row so each side works alone. Back work pulls the shoulders back and undoes desk and driving posture. Biceps get plenty of work from rows and pulldowns.</li>
+        <li><b>Day D, shoulders and arms with dumbbells.</b> Three days after Monday's pressing, so the chest and triceps have recovered. Dumbbells force the small stabilizer muscles to work, which is a big part of what "functional" means. Loads are lighter; control is the point.</li>
+        <li><b>Day E, lower body with free weights and functional work.</b> Three days after Tuesday. Hinge (kettlebell deadlift, Romanian deadlift), lunge, step-up, carry, sled. This is the day that transfers to lifting things, stairs, and getting up off the floor without thinking about it.</li>
+        <li><b>Core every day.</b> The core recovers fast and yours needs the practice, so each day ends with two core moves (plus dead bug and glute bridge in the warm-up every session). The moves rotate: anti-rotation and plank on A, dead bug and bird dog on B, crunch and side plank on C, suitcase carry and back extension on D, farmer's carry and dead bug on E. Carries train the obliques (the love handle muscle) the way they are meant to work: resisting tipping, not twisting.</li>
+      </ul>
+      <p>If a day gets missed, do not stack two days together; just do the next one in the rotation and let the week slide. The tracker always tells you which day is next. If you feel wrecked by Thursday in the first few weeks, drop Day D's weights by a third; the cardio hour still happens.</p>
+      <h3 style="margin-top:14px">How to add weight</h3>
+      <p>Each lift has a rep range, like 3 × 10 to 12. Start light enough that form is clean on every rep. When you hit the top of the range on all sets with good form two sessions in a row, add weight next time: 5 lb on upper body machines, 10 lb on leg machines, 10 to 20 lb on the leg press. If reps drop below the bottom of the range, the weight stays or goes down. The tracker shows your last numbers next to each lift so you always know what to beat.</p>
+      <h3 style="margin-top:14px">Form rules that apply to everything</h3>
+      <ul>
+        <li>Set the seat and pads first. Joints line up with the machine's pivot point (usually marked with a red or yellow dot).</li>
+        <li>Lower the weight slower than you lift it. Two seconds down, one second up.</li>
+        <li>Brace before every rep: breathe into your belly, tighten like you are about to be poked in the stomach.</li>
+        <li>Last rep looks like the first rep. If it does not, the weight is too heavy.</li>
+        <li>No pain in a joint. Muscle burn is fine; sharp or pinching is a stop sign.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Finding things at Crosstown (Eden Prairie)</h2>
+      <p style="margin-top:8px">The club's workout floor is split into three zones. Knowing which zone a machine lives in saves a lot of wandering.</p>
+      <table style="margin-top:10px">
+        <tr><th>Zone</th><th>What is there</th><th>You use it for</th></tr>
+        <tr><td>Strength</td><td>Selectorized machines (pin stack, each one has a seat-adjust lever and a diagram on the frame), plate-loaded machines (you load 45 and 25 lb plates), Cable Motion stations, adjustable benches, dumbbells, kettlebells, racks</td><td>Every lift in Days A, B, C and D. Start on the pin-stack version of each machine; the plate-loaded ones come later.</td></tr>
+        <tr><td>Cardio</td><td>Recumbent and upright bikes, Stages cycles, stair climbers, traditional and slat-belt treadmills, Skillmill manual treadmills, ellipticals, recumbent cross trainers, upper body ergometer</td><td>The cardio hour. Recumbent bike is the easiest on the hips and back for long rides; the upright or Stages cycle once 60 minutes feels routine.</td></tr>
+        <tr><td>Functional</td><td>Rowing machines, fan bike, SkiErg, VersaClimber, TRX, sled, medicine and stability balls, BOSU, plyo boxes, open turf</td><td>Mobility and core work (floor space, stability ball), and the rower or fan bike as an alternate for 10 minutes of the hour when the bike gets boring.</td></tr>
+      </table>
+      <p class="note" style="margin-top:8px">Life Time trainers on the floor will set a machine up for you if you ask; that is part of the membership. Ask once per machine, then the diagram and the cues below carry you.</p>
+    </div>
+
+    <div class="card">
+      <h2>The cardio hour</h2>
+      <p style="margin-top:8px">One hour of aerobic work every gym day, 300 minutes a week. Most of it is at effort 5 or 6 out of 10: you can talk in short sentences but would not want to sing. That pace is what the visceral fat studies used. One day a week is intervals, because short harder efforts build fitness faster and hit glucose hard; the rest stays easy so you can do it five days running.</p>
+      <table style="margin-top:10px">
+        <tr><th>Day</th><th>Aerobic session</th></tr>
+        <tr><td>A Mon</td><td>Steady ride, 60 min at effort 5</td></tr>
+        <tr><td>B Tue</td><td>Mixed machines: bike plus stair climber plus treadmill walk, split per the table below</td></tr>
+        <tr><td>C Wed</td><td>Bike intervals: 8 rounds of 1 min hard (effort 7) and 3 min easy, inside an easy hour</td></tr>
+        <tr><td>D Thu</td><td>Rower 10 min, then steady ride 45 min</td></tr>
+        <tr><td>E Fri</td><td>Sled pushes, then easy recovery ride 50 min</td></tr>
+      </table>
+      <p style="margin-top:10px">Each day's session is spelled out step by step on the Today tab. The stair climber and treadmill come in on Day B only, so the endurance builds on one day a week without wrecking the others.</p>
+      <h3 style="margin-top:14px">Day B stair and treadmill progression</h3>
+      <div class="tscroll"><table style="margin-top:6px">
+        <tr><th>Weeks</th><th>Bike</th><th>Stair climber</th><th>Treadmill</th></tr>
+        <tr><td>1 to 2</td><td>60</td><td>0</td><td>0</td></tr>
+        <tr><td>3 to 4</td><td>45</td><td>5 (slow, level 3 to 4)</td><td>10 walk, 3.0 mph</td></tr>
+        <tr><td>5 to 6</td><td>40</td><td>8</td><td>12 walk, add 3% incline</td></tr>
+        <tr><td>7 to 8</td><td>35</td><td>10</td><td>15 walk, 5% incline</td></tr>
+        <tr><td>9 to 12</td><td>30</td><td>12 to 15</td><td>15 to 20, incline or light jog bursts</td></tr>
+      </table></div>
+      <p class="note" style="margin-top:8px">Rule: add 2 minutes to the stair climber or treadmill only when last week's amount felt easy. Never add both in the same week. The bike absorbs whatever is left to reach 60. Once Day B's stairs reach 15 minutes comfortably, you can start putting 5 minutes of stairs at the start of Day A as well.</p>
+      <h3 style="margin-top:14px">Which bike</h3>
+      <p>Recumbent for the first month: it supports the back and does not load the hip flexors, which matters with yours tight. Move to the upright bike or a Stages cycle once an hour feels routine; they burn a bit more and work the core to hold you up. Seat height on any bike: knee almost straight at the bottom of the pedal stroke, a slight bend left.</p>
+    </div>
+
+    <div class="card">
+      <h2>Blood sugar and the gym</h2>
+      <p style="margin-top:8px">Exercise lowers blood sugar two ways: muscles pull in glucose directly while they work (no insulin needed), and for roughly a day afterward your body responds better to the insulin it has. Lifting adds muscle, which is more storage space for glucose. The hour of cardio and the lifting do different jobs, so keep both.</p>
+      <ul style="margin-top:8px">
+        <li><b>Check before.</b> Under 100: eat 15 to 20 g of carbs (a banana, 4 glucose tabs, half a cup of juice) and wait 15 minutes. 100 to 250: go. Over 250 and you feel sick or have ketones: skip today and call your clinic.</li>
+        <li><b>Carry fast sugar</b> in your gym bag. Shaky, sweaty, confused, or suddenly weak mid-workout means stop and treat it, then check.</li>
+        <li><b>Sauna and steam hide low-sugar symptoms</b> (sweating, dizziness, racing heart). Do not go into either when you are under 100, and drink water before both.</li>
+        <li><b>Check after</b> and log it. Over a few weeks the before and after chart tells you how your body responds, which is useful for your doctor.</li>
+        <li><b>Lows can show up hours later</b>, including overnight, after a long session. Eat a real meal with protein within an hour of finishing.</li>
+        <li>If you take insulin or a sulfonylurea, ask your prescriber about dose timing around workouts before you start this plan. That is not something to guess at.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Weak core and tight hips</h2>
+      <p style="margin-top:8px">These two go together: tight hip flexors tilt the pelvis forward, which switches off the deep abdominals and loads the lower back. The fix is the same every session: stretch the front of the hip, then teach the core to hold the pelvis still (dead bug, bird dog, plank, Pallof press). Core work is in every lifting day on purpose. Do not skip it to save time; skip a set of curls instead.</p>
+    </div>
+
+    <div class="card">
+      <h2>What the research says for you</h2>
+      <p style="margin-top:8px">A 38 year old man with type 2 diabetes who wants to lose the love handles and build lean, functional muscle. Here is what the strongest studies found, and what each one changes in this plan.</p>
+      <ul style="margin-top:8px">
+        <li><b>Do both weights and cardio; neither alone is enough.</b> In the DARE trial (251 adults with type 2 diabetes, 26 weeks), aerobic alone and weights alone each cut HbA1c about 0.5 points; doing both cut it 0.97. HART-D (262 adults, 9 months) found the same: only the combined group had a significant HbA1c drop, and it also lost the most waist (2.8 cm) and fat mass (1.7 kg). This is why every session here has lifts and a cardio hour.</li>
+        <li><b>The ADA's dose.</b> At least 150 minutes a week of moderate to vigorous aerobic work on 3 or more days with no more than 2 days off in a row, plus resistance training 2 to 3 days a week on non-consecutive days, 8 to 10 exercises, 1 to 3 sets of 10 to 15 reps to near fatigue, adding load only once you consistently beat the target reps. Five sessions of 60 minutes puts you at 300 minutes, and the five-day rotation gives each muscle its 48 hours. The 15 minute walk after meals is a checkbox on the Today tab for the weekend.</li>
+        <li><b>Love handles cannot be targeted.</b> A six week trial of 7 ab exercises, 5 days a week, improved curl-up endurance and changed abdominal fat by nothing. The core work here is for your weak core and your back, not for the fat on top of it. That fat comes off through total calorie balance and the cardio volume.</li>
+        <li><b>For the deep belly fat, cardio does the heavy lifting.</b> Two meta-analyses (35 trials in the general population; 24 trials in type 2 diabetes) found aerobic exercise reduces visceral fat and resistance training alone does not. So the bike hour stays even after the lifting gets fun.</li>
+        <li><b>Weights are what change the shape.</b> In HART-D the resistance and combined groups lost 1.4 and 1.7 kg of fat mass; aerobic alone lost 0.6 and was not different from control. Lifting is what keeps muscle while fat comes off, which is the difference between lean and just lighter.</li>
+        <li><b>Protein.</b> A meta-analysis of 49 trials found muscle and strength gains from lifting rise with protein intake up to about 1.6 g per kg of body weight a day, then plateau. For a 210 lb (95 kg) man that is roughly 150 g a day, spread across meals, from food first. Ask your clinic if you have any kidney concern; otherwise this is a normal intake for someone lifting.</li>
+        <li><b>Hypoglycemia timing.</b> Lows after exercise usually show up 6 to 15 hours later and can occur up to 48 hours out. Lifting before cardio (the order used here) helps blunt the drop. Exercising with high glucose and ketones is not recommended.</li>
+      </ul>
+      <p class="note" style="margin-top:8px">Sources: Sigal et al., Annals of Internal Medicine 2007 (DARE); Church et al., JAMA 2010 (HART-D); Colberg et al., Diabetes Care 2016 (ADA position statement); Vispute et al., J Strength Cond Res 2011; Ismail et al., Obesity Reviews 2012; Sabag et al., Diabetes and Metabolism 2017; Morton et al., Br J Sports Med 2018.</p>
+    </div>
+
+    <div class="card" id="machineGuide">
+      <h2>Machine and exercise guide</h2>
+      <p class="note" style="margin:6px 0 10px">Every lift in the program, with what the machine looks like and the cues that fix the common mistakes.</p>
+      <div id="guideList"></div>
+    </div>
+  </div>
+</section>
+</div>
+
+<nav class="tabs" role="tablist">
+  <button type="button" role="tab" aria-selected="true" data-view="today">Today</button>
+  <button type="button" role="tab" aria-selected="false" data-view="history">History</button>
+  <button type="button" role="tab" aria-selected="false" data-view="progress">Progress</button>
+  <button type="button" role="tab" aria-selected="false" data-view="guide">Guide</button>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+// ---------- PROGRAM ----------
+const MOBILITY = [
+  ["Half-kneeling hip flexor stretch", "30 sec each side, twice. Squeeze the glute of the back leg, tuck the tailbone, then lean forward a little. Stretch is in the front of the back hip, not the lower back."],
+  ["90/90 hip switches", "10 slow switches. Sit with one leg bent in front and one bent to the side, rotate knees to the other side. Keep the chest tall."],
+  ["Cat-cow", "10 slow reps on hands and knees. Round the whole back, then arch. Moves the pelvis through its range."],
+  ["Glute bridge", "15 reps. Heels close to hips, push through heels, squeeze glutes at top, ribs down. Wakes up the glutes so the hip flexors can relax."],
+  ["Dead bug", "8 each side. On your back, lower back pressed flat into the floor the whole time. Opposite arm and leg lower slowly. If the back arches, shorten the range."],
+  ["Leg swings", "10 front to back, 10 side to side, each leg. Hold the wall. Controlled, not flung."],
+];
+
+const EX = {
+  "Leg Press": {d:"Lower", target:"3 × 10 to 12", inc:"10 to 20 lb",
+    machine:"Big angled seat with a flat platform for your feet, in the strength zone. Crosstown has both a plate-loaded one (you load 45 lb plates) and a selectorized one with a pin stack. Start on the pin stack.",
+    cues:["Feet shoulder width, middle of the platform, toes slightly out.","Lower back and hips stay glued to the pad; if your hips roll up off the pad, you went too deep.","Lower until knees are about 90 degrees, then push through your heels.","Do not lock your knees at the top; keep a slight bend.","Knees track over the toes, never caving inward."]},
+  "Seated Leg Curl": {d:"Lower", target:"3 × 12", inc:"5 to 10 lb",
+    machine:"Sit upright, legs out straight on a pad, a second pad across your lower shins. You pull your heels down and under the seat.",
+    cues:["Lap pad snug on your thighs so hips cannot lift.","Ankle pad just above the heels.","Curl all the way, pause one second, return over two seconds.","Toes pointed toward you (flexed) hits the hamstrings harder."]},
+  "Leg Extension": {d:"Lower", target:"3 × 12", inc:"5 to 10 lb",
+    machine:"Seated, padded bar across the front of your ankles. You straighten your knees against it.",
+    cues:["Back flat against the pad, knees lined up with the machine's pivot dot.","Straighten fully and squeeze the thigh for one second at the top.","Lower slowly; do not let the stack slam.","No swinging the body or gripping the handles for help."]},
+  "Hip Thrust": {d:"Lower", target:"3 × 12", inc:"10 lb (start with body weight, then a dumbbell on the lap)",
+    machine:"A bench and your own body, or the hip thrust machine if the floor has one (belt across the hips, feet on a platform).",
+    cues:["Upper back on the bench edge, feet flat, shins vertical at the top.","Chin tucked, ribs down, eyes forward, not at the ceiling.","Drive through heels, squeeze glutes hard at the top; thighs and torso make a flat table.","Stop at the top; do not arch the lower back to go higher."]},
+  "Seated Calf Raise": {d:"Lower", target:"3 × 15", inc:"10 lb",
+    machine:"Seat with a knee pad and a small step for the balls of your feet. Or stand on the edge of a step on the leg press platform.",
+    cues:["Full range: heels drop below the step, then all the way up on the toes.","Pause one second at the top.","Slow on the way down."]},
+  "Dead Bug": {d:"Core", target:"3 × 8 each side", inc:"slow it down, then hold a light plate over the chest",
+    machine:"Floor, on your back.",
+    cues:["Lower back pressed flat into the floor the entire set; that is the whole exercise.","Arms straight up, knees over hips. Lower the opposite arm and leg slowly, exhale on the way down.","If the back arches, shorten the range or only move the legs.","This teaches the core to hold the pelvis still while the hips move, which is exactly what tight hip flexors have been stopping."]},
+  "Plank": {d:"Core", target:"3 × 20 to 40 sec", inc:"5 sec", timed:true,
+    machine:"Floor. Forearms and toes.",
+    cues:["Elbows under shoulders, squeeze glutes, tuck the tailbone slightly.","Body is one straight line; hips neither sag nor pike up.","Breathe. If the lower back starts to ache, stop the set and drop to the knees."]},
+  "Bird Dog": {d:"Core", target:"3 × 8 each side", inc:"hold longer",
+    machine:"Floor, hands and knees.",
+    cues:["Reach opposite arm and leg out; hips stay level like a glass of water is on your lower back.","Pause two seconds, return slowly.","Small range beats a big sloppy one."]},
+  "Chest Press Machine": {d:"Push", target:"3 × 10 to 12", inc:"5 lb",
+    machine:"Seated, two handles at chest height that you push forward. Seat height adjusts with a lever on the side.",
+    cues:["Set the seat so the handles line up with the middle of your chest, not your shoulders.","Pull shoulder blades back and down into the pad before the first rep and keep them there.","Elbows about 45 degrees from your sides, not flared straight out.","Press to almost straight, then return slowly until the handles are at your chest.","Feet flat, head on the pad, no shrugging."]},
+  "Shoulder Press Machine": {d:"Push", target:"3 × 10", inc:"5 lb",
+    machine:"Seated, handles at shoulder height that you push straight up.",
+    cues:["Set the seat so the handles start level with your ears or a little below.","Ribs down, lower back against the pad; do not arch to push harder.","Press up, stop just short of locked elbows, lower slowly.","If your shoulders pinch, use the neutral (palms facing) handles."]},
+  "Pec Deck": {d:"Push", target:"3 × 12", inc:"5 lb",
+    machine:"Seated, two arm pads or handles out to the sides that you bring together in front of you.",
+    cues:["Handles at chest height, slight bend in the elbows the whole time.","Squeeze the chest together for one second at the front.","Open slowly and only as far as the shoulders feel comfortable."]},
+  "Triceps Pushdown": {d:"Push", target:"3 × 12", inc:"5 lb",
+    machine:"Cable Motion station with a rope or straight bar clipped to the top pulley.",
+    cues:["Elbows pinned to your sides; they do not move forward or back.","Push down until arms are straight, spread the rope at the bottom.","Control the return to chest height.","Stand tall, slight lean forward, no shrugging."]},
+  "Lateral Raise": {d:"Push", target:"3 × 12 to 15", inc:"2.5 to 5 lb",
+    machine:"Light dumbbells or the lateral raise machine (pads under the elbows).",
+    cues:["Lift out to the sides to shoulder height, like pouring two pitchers.","Slight bend in the elbows, lead with the elbows.","Lower slowly. Light weight; if you are swinging, it is too heavy."]},
+  "Pallof Press": {d:"Core", target:"3 × 10 each side", inc:"5 lb",
+    machine:"Cable Motion station, single handle set at chest height. You stand sideways to it.",
+    cues:["Hold the handle at your chest with both hands, feet shoulder width.","Press straight out in front of you and hold two seconds; the cable tries to twist you and you refuse.","Bring it back. Hips and shoulders stay square the whole time.","This is the single best exercise for your core right now; take it seriously."]},
+  "Ab Crunch Machine": {d:"Core", target:"3 × 12", inc:"5 lb",
+    machine:"Seated, pads on your chest or handles behind your head, feet under rollers. You curl forward.",
+    cues:["Curl the ribs toward the hips; think of shortening the front of your body.","Do not pull with the arms or yank the neck.","Slow return."]},
+  "Lat Pulldown": {d:"Pull", target:"3 × 10 to 12", inc:"5 to 10 lb",
+    machine:"Seated, wide bar overhead on a cable, knee pads to hold you down.",
+    cues:["Grip a bit wider than shoulders, knee pad snug.","Lean back slightly (about 15 degrees), chest up.","Pull the bar to the top of your chest by driving the elbows down and back.","Never behind the neck.","Let the arms go all the way up, slow and controlled, shoulders rising at the top."]},
+  "Seated Cable Row": {d:"Pull", target:"3 × 10 to 12", inc:"5 to 10 lb",
+    machine:"Seated row machine (pin stack, chest pad) or a Cable Motion station with the pulley set low and a V handle.",
+    cues:["Knees slightly bent, torso upright, chest tall.","Pull the handle to your belly button, squeezing the shoulder blades together.","No rocking back and forth; the torso stays still.","Let the shoulder blades spread forward at the end of each rep."]},
+  "Assisted Pull-up": {d:"Pull", target:"3 × 6 to 8", inc:"lower the assist 10 lb",
+    machine:"Tall machine with a knee platform. More weight on the stack means more help.",
+    cues:["Start with enough assist that you can do 8 clean reps.","Pull chest toward the bar, elbows down.","Lower all the way, slow.","Progress means less assist over time, which is the opposite of other machines."]},
+  "Rear Delt Fly": {d:"Pull", target:"3 × 12 to 15", inc:"5 lb",
+    machine:"The pec deck with the arms set behind you (or sit facing the pad). You push the handles back and out.",
+    cues:["Handles at shoulder height, slight bend in elbows.","Lead with the elbows out and back, squeeze between the shoulder blades.","Light weight. This is a small muscle."]},
+  "Face Pull": {d:"Pull", target:"3 × 15", inc:"5 lb",
+    machine:"Cable Motion station, rope set at about face height.",
+    cues:["Pull the rope toward your face, hands finishing beside your ears, elbows high.","Squeeze the back of the shoulders.","Great for posture; keeps the shoulders healthy under all the pressing."]},
+  "Biceps Curl": {d:"Pull", target:"3 × 12", inc:"5 lb",
+    machine:"Dumbbells or the preacher curl machine.",
+    cues:["Elbows stay at your sides; only the forearm moves.","Lower over two seconds.","No swinging the back to get the weight up."]},
+  "Back Extension": {d:"Core", target:"3 × 12", inc:"hold a plate",
+    machine:"The 45 degree bench with pads for the hips and ankle rollers.",
+    cues:["Pad just below the hip bones so you can hinge.","Lower with a flat back, come up until the body is straight, no higher.","Squeeze the glutes at the top; this is a glute and hamstring exercise as much as a back one."]},
+  "Farmer's Carry": {d:"Core", target:"3 × 40 steps", inc:"5 lb each hand",
+    machine:"Two heavy dumbbells or kettlebells.",
+    cues:["Stand tall, shoulders back, ribs down.","Walk slow and controlled; do not lean to either side.","Grip is often the limit; that is fine."]},
+  "Goblet Squat": {d:"Lower", target:"3 × 10", inc:"5 lb",
+    machine:"One dumbbell held vertically against your chest.",
+    cues:["Feet shoulder width, toes slightly out.","Sit down between your heels, elbows inside the knees at the bottom.","Chest up, heels down the whole time.","Only go as deep as you can with the heels down and back flat."]},
+  "Dumbbell Romanian Deadlift": {d:"Lower", target:"3 × 10", inc:"5 lb",
+    machine:"Two dumbbells.",
+    cues:["Soft knees, push the hips straight back like closing a car door with your butt.","Dumbbells slide down the thighs; back stays flat, shoulders pulled back.","Stop when you feel the hamstrings stretch (around mid shin), then squeeze the glutes to stand.","If the lower back rounds, you went too low."]},
+  "Chest-Supported Row": {d:"Pull", target:"3 × 12", inc:"5 lb",
+    machine:"Lie chest down on an incline bench with dumbbells, or the row machine with a chest pad.",
+    cues:["Chest stays on the pad; no lifting the torso.","Pull elbows back, squeeze shoulder blades, lower slowly."]},
+  "Dumbbell Bench Press": {d:"Push", target:"3 × 10", inc:"5 lb",
+    machine:"Flat bench, two dumbbells.",
+    cues:["Feet flat, shoulder blades pinched back, slight arch in the upper back only.","Lower to chest level with elbows at about 45 degrees.","Press up and slightly in; do not clang the dumbbells together."]},
+  "Dumbbell Shoulder Press": {d:"Push", target:"3 × 10", inc:"5 lb per hand",
+    machine:"Two dumbbells, seated on an adjustable bench set upright (about 85 degrees).",
+    cues:["Start with the dumbbells at ear height, palms forward or turned slightly in.","Press up and slightly together, stop just short of locked elbows.","Ribs down, lower back on the pad; do not arch to push harder.","Lower slowly to ear height. Harder than the machine because you have to balance it; start 10 lb lighter per hand than you think."]},
+  "Dumbbell Incline Press": {d:"Push", target:"3 × 10", inc:"5 lb per hand",
+    machine:"Adjustable bench set to 30 degrees, two dumbbells.",
+    cues:["Shoulder blades pinched back and down on the bench, feet flat.","Lower until the dumbbells are level with the upper chest, elbows about 45 degrees out.","Press up and slightly in. Upper chest and front shoulder."]},
+  "Dumbbell Shrug": {d:"Push", target:"3 × 12", inc:"5 lb per hand",
+    machine:"Two heavier dumbbells, standing.",
+    cues:["Shrug straight up toward the ears, pause one second, lower slowly.","No rolling the shoulders; straight up and down only.","Upper traps and grip."]},
+  "Hammer Curl": {d:"Pull", target:"3 × 12", inc:"5 lb per hand",
+    machine:"Two dumbbells, palms facing each other.",
+    cues:["Elbows at your sides, curl both up with thumbs on top.","Lower over two seconds.","Hits the forearm and the side of the biceps; good for grip."]},
+  "Overhead Triceps Extension": {d:"Push", target:"3 × 12", inc:"5 lb",
+    machine:"One dumbbell held in both hands overhead, seated or standing.",
+    cues:["Elbows point forward and stay close to the head.","Lower the dumbbell behind the head until the forearms touch the biceps, then press up.","Ribs down; do not arch the lower back as you lower it."]},
+  "One-Arm Dumbbell Row": {d:"Pull", target:"3 × 10 each side", inc:"5 lb",
+    machine:"One dumbbell, one hand and one knee on a flat bench.",
+    cues:["Back flat, like a table; the other hand braces on the bench.","Pull the elbow up and back toward the hip, not out to the side.","Squeeze the shoulder blade at the top, lower slowly to a full stretch.","No twisting the torso to lift it."]},
+  "Kettlebell Deadlift": {d:"Lower", target:"3 × 10", inc:"next kettlebell up",
+    machine:"One kettlebell on the floor between your feet.",
+    cues:["Feet hip width, kettlebell between the arches.","Hips back, chest up, flat back, grab the handle with both hands.","Stand up by driving the floor away with your feet; the arms are just hooks.","Squeeze glutes at the top, do not lean back. Lower by pushing the hips back.","The safest way to learn the hinge; you earn the heavier barbell version later."]},
+  "Dumbbell Reverse Lunge": {d:"Lower", target:"3 × 8 each side", inc:"5 lb per hand",
+    machine:"Two dumbbells at your sides, or none to start.",
+    cues:["Step back, lower until the back knee nearly touches the floor.","Front shin stays vertical, front heel down, chest up.","Push through the front heel to stand. Stepping back is kinder to the knees than stepping forward.","Hold the wall with one hand if balance is a problem at first."]},
+  "Step-Up": {d:"Lower", target:"3 × 8 each side", inc:"5 lb per hand or a taller box",
+    machine:"A plyo box or bench, knee height or a bit below. Dumbbells optional.",
+    cues:["Whole foot on the box, drive through that heel, stand all the way up.","Do not push off the floor foot; the top leg does the work.","Lower slowly under control. Functional strength for stairs and getting up from the floor."]},
+  "Sled Push": {d:"Lower", target:"3 × 20 yards", inc:"one plate",
+    machine:"The Torque sled on the turf in the functional zone. Load it with plates.",
+    cues:["Arms straight or slightly bent on the high handles, body leaned forward in one line.","Short, quick steps, drive through the balls of the feet.","Breathe. Zero skill required and almost impossible to do wrong, which is why it is here. Also counts as cardio."]},
+  "Suitcase Carry": {d:"Core", target:"3 × 40 steps each side", inc:"5 lb",
+    machine:"One heavy dumbbell or kettlebell in one hand.",
+    cues:["Stand tall, shoulders level; the weight tries to tip you and you refuse.","Walk slow and controlled, switch hands, repeat.","This is the love handle muscle (obliques) doing its real job, which is stopping you from tipping, not twisting."]},
+  "Side Plank": {d:"Core", target:"3 × 20 sec each side", inc:"5 sec", timed:true,
+    machine:"Floor.",
+    cues:["Elbow under shoulder, hips lifted so the body is one line.","Knees down to start if the full version is too much.","Push the hip up; do not let it sag."]},
+};
+
+const DAYS = {
+  A:{name:"Chest and arms, plus core", note:"Monday. Machine chest press first while you are fresh, then the dumbbell version, then arms. Keep shoulder blades back on every press. Core: Pallof press and plank.",
+     ex:["Chest Press Machine","Dumbbell Bench Press","Pec Deck","Triceps Pushdown","Biceps Curl","Pallof Press","Plank"]},
+  B:{name:"Lower body (machines), plus core", note:"Tuesday. Leg machines, heaviest loads of the week. Core work that holds your pelvis still. Hips will feel it tomorrow; that is the point.",
+     ex:["Leg Press","Seated Leg Curl","Leg Extension","Hip Thrust","Seated Calf Raise","Dead Bug","Bird Dog"]},
+  C:{name:"Back, plus core", note:"Wednesday. Lats, upper back, rear shoulders, with one dumbbell row for each side on its own. Pulling fixes posture. Core: crunch machine and side plank.",
+     ex:["Lat Pulldown","Seated Cable Row","One-Arm Dumbbell Row","Assisted Pull-up","Rear Delt Fly","Face Pull","Ab Crunch Machine","Side Plank"]},
+  D:{name:"Shoulders and arms (dumbbells), plus core", note:"Thursday. Free weight day for the upper body: lighter loads, more balance work. Chest and back got Monday and Wednesday, so today is the shoulders and the arms. Core: suitcase carry and back extension.",
+     ex:["Dumbbell Shoulder Press","Lateral Raise","Dumbbell Incline Press","Dumbbell Shrug","Hammer Curl","Overhead Triceps Extension","Suitcase Carry","Back Extension"]},
+  E:{name:"Lower body (free weights) and functional, plus core", note:"Friday. The hinge, the lunge, the step, the carry, the sled: strength you use outside the gym. Lighter than Tuesday, more skill. Core: farmer's carry and dead bug.",
+     ex:["Goblet Squat","Kettlebell Deadlift","Dumbbell Reverse Lunge","Dumbbell Romanian Deadlift","Step-Up","Sled Push","Farmer's Carry","Dead Bug"]},
+};
+const ORDER = ["A","B","C","D","E"];
+
+// Aerobic sessions. Each is one hour. Effort is 1 to 10: 5 means talking in short sentences, 7 means a few words at a time.
+const CARDIO = {
+  A:{title:"Steady ride, 60 min", why:"The base session. Long and easy is what moves visceral fat and insulin sensitivity.",
+     steps:["5 min easy spin, effort 3, to warm up","50 min steady, effort 5, pick a level where your breathing is audible but you can still talk","5 min easy spin to cool down"]},
+  B:{title:"Mixed machines, 60 min", why:"Legs are already worked, so this day builds the stair and treadmill time gradually. Follow the week table in the Guide for the split.",
+     steps:["Bike: weeks 1 to 2, 60 min; later weeks per the table (45, 40, 35, 30)","Stair climber: 0 min in weeks 1 to 2, then 5, 8, 10, 12 to 15; slow steps, effort 6, hands resting on the rails, not gripping","Treadmill: 0 in weeks 1 to 2, then 10, 12, 15, 15 to 20; walk 3.0 mph, add incline (3 to 5 percent) before adding speed","Bike absorbs whatever is left to reach 60"]},
+  C:{title:"Bike intervals, 60 min", why:"Short harder efforts improve fitness faster than steady riding alone and have a strong effect on glucose. Still mostly easy minutes.",
+     steps:["10 min easy, effort 3 to 4","8 rounds: 1 min at effort 7 (breathing hard, a few words at a time), then 3 min at effort 4. That is 32 min","18 min steady at effort 5 to fill the hour","If a round feels like effort 9, the hard minute is too hard; back off the resistance next round"]},
+  D:{title:"Rower plus ride, 60 min", why:"The rower trains the back and arms aerobically and takes the pressure off the legs. Upper body day, upper body cardio.",
+     steps:["Rower: 10 min easy, effort 4 to 5; legs push first, then lean back, then pull the handle. Reverse on the way forward","Bike: 45 min steady, effort 5","5 min easy spin. (Fan bike or SkiErg can swap in for the rower any week.)"]},
+  E:{title:"Sled plus easy ride, 60 min", why:"Sled pushes already raised the heart rate. The rest is recovery pace so Friday's legs come back by Monday.",
+     steps:["Sled pushes from the lifting block count for 5 min","Bike or recumbent: 50 min easy, effort 4 to 5; this is the one day the rule is \"do not push\"","5 min easy spin"]},
+};
+
+// ---------- STATE ----------
+let db=null, sessions=[], editingId=null, currentDay="A";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const LS="ib-training-log";
+function lsLoad(){try{return JSON.parse(localStorage.getItem(LS)||"[]")}catch(e){return []}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify(sessions))}catch(e){}}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2200)}
+function num(id){const v=$(id).value.trim();return v===""?null:Number(v)}
+
+// ---------- TODAY VIEW ----------
+function lastFor(ex, excludeId){
+  const list=sessions.filter(s=>s.id!==excludeId&&s.exercises&&s.exercises[ex]&&s.exercises[ex].some(st=>st.w!=null||st.r!=null)).sort((a,b)=>a.date<b.date?1:-1);
+  return list.length?{date:list[0].date,sets:list[0].exercises[ex]}:null;
+}
+function fmtSets(sets){return sets.filter(s=>s.w!=null||s.r!=null).map(s=>(s.w??"bw")+"×"+(s.r??"?")).join(", ")}
+function suggestNext(){
+  const done=sessions.filter(s=>ORDER.includes(s.day)).sort((a,b)=>a.date<b.date?1:-1);
+  if(!done.length) return "A";
+  const i=ORDER.indexOf(done[0].day);return ORDER[(i+1)%ORDER.length];
+}
+function renderMobility(checked){
+  $("#mobList").innerHTML=MOBILITY.map((m,i)=>`<label class="check"><input type="checkbox" id="mob${i}" ${checked&&checked[i]?"checked":""}><span><span class="t">${m[0]}</span><br><span class="d">${m[1]}</span></span></label>`).join("");
+}
+function renderExercises(day, data){
+  const d=DAYS[day];
+  $("#dayNote").textContent=d.name+". "+d.note;
+  $("#exList").innerHTML=d.ex.map((name,i)=>{
+    const e=EX[name], last=lastFor(name,editingId), prev=data&&data[name];
+    const sets=[0,1,2].map(k=>{
+      const src=prev&&prev[k]?prev[k]:(last&&last.sets[k]?last.sets[k]:{});
+      const w=src.w??"", r=prev&&prev[k]?(prev[k].r??""):"";
+      const done=prev&&prev[k]&&prev[k].done;
+      return `<div class="set"><span class="n">${k+1}</span><input type="number" inputmode="decimal" step="0.5" placeholder="lb" aria-label="${name} set ${k+1} weight" data-ex="${name}" data-k="${k}" data-f="w" value="${w}"><span class="x">×</span><input type="number" inputmode="numeric" placeholder="${e.timed?"sec":"reps"}" aria-label="${name} set ${k+1} reps" data-ex="${name}" data-k="${k}" data-f="r" value="${r}"><button type="button" class="done" aria-pressed="${done?"true":"false"}" data-ex="${name}" data-k="${k}" aria-label="mark set done">✓</button></div>`;
+    }).join("");
+    return `<div class="ex"><div class="head"><div><div class="name">${i+1}. ${name}</div><div class="target">${e.target} · add ${e.inc} when you own the top of the range</div></div><div class="last">${last?"Last: "+fmtSets(last.sets):"First time"}</div></div>
+      <div class="sets">${sets}</div>
+      <details><summary>Machine and form cues</summary><p class="machine">${e.machine}</p><ul class="cues">${e.cues.map(c=>"<li>"+c+"</li>").join("")}</ul></details></div>`;
+  }).join("");
+  const c=CARDIO[day];
+  $("#cardioPlan").innerHTML=`<div class="name" style="font-family:var(--display);font-size:1.25rem;font-weight:700">${c.title}</div><p class="note">${c.why}</p><ol class="cues">${c.steps.map(s=>"<li>"+s+"</li>").join("")}</ol>`;
+  $("#cardioNote").textContent="Log the minutes you actually did below. The total should reach 60.";
+}
+function readSets(){
+  const out={};
+  $$("#exList input[data-ex]").forEach(inp=>{
+    const n=inp.dataset.ex,k=+inp.dataset.k;out[n]=out[n]||[{},{},{}];
+    const v=inp.value.trim();out[n][k][inp.dataset.f]=v===""?null:Number(v);
+  });
+  $$("#exList button.done").forEach(b=>{out[b.dataset.ex][+b.dataset.k].done=b.getAttribute("aria-pressed")==="true"});
+  return out;
+}
+function glucoseCheck(){
+  const g=num("#gPre"), el=$("#glucoseMsg");
+  if(g==null){el.hidden=true;return}
+  el.hidden=false;el.className="banner";
+  if(g<70){el.className="banner bad";el.textContent="Low. Treat it now (15 to 20 g fast carbs), wait 15 minutes, recheck. No sauna, no workout until you are above 100."}
+  else if(g<100){el.className="banner";el.textContent="On the low side. Eat 15 to 20 g of carbs and wait 15 minutes before the sauna. Keep glucose tabs with you."}
+  else if(g<=250){el.className="banner good";el.textContent="Good range to train. Carry fast sugar, drink water before the sauna."}
+  else{el.className="banner bad";el.textContent="High. If you feel sick, nauseous, or have ketones, skip today and contact your clinic. Otherwise go easy, hydrate, and recheck after."}
+}
+function proteinTarget(){
+  let w=num("#bw");
+  if(w==null){const last=[...sessions].filter(s=>s.bw!=null).sort((a,b)=>a.date<b.date?1:-1)[0];w=last?last.bw:null}
+  $("#protTarget").textContent=w?Math.round(w*0.4536*1.6/5)*5+" g":"about 150 g";
+}
+function cardioTotal(){
+  const t=(num("#bike")||0)+(num("#stair")||0)+(num("#tread")||0)+(num("#other")||0);
+  $("#cardioTotal").innerHTML = t? `Total: <b>${t} min</b> ${t>=60?'<span class="pill good">hour done</span>':'<span class="pill warn">'+(60-t)+' to go</span>'}`:"";
+}
+function setDay(day,data){
+  currentDay=day;
+  $$("#daySeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.day===day?"true":"false"));
+  renderExercises(day,data);
+}
+function fillForm(s){
+  editingId=s?s.id:null;
+  $("#sDate").value=s?s.date:todayStr();
+  ["gPre","bw","sauna","bike","stair","tread","other","rpe","gPost","steam"].forEach(k=>{$("#"+k).value=s&&s[k]!=null?s[k]:""});
+  $("#level").value=s&&s.level?s.level:"";$("#notes").value=s&&s.notes?s.notes:"";
+  $("#bikeType").value=s&&s.bikeType?s.bikeType:"Recumbent";
+  const hab=(s&&s.habits)||{};$("#habProtein").checked=!!hab.protein;$("#habWalk").checked=!!hab.walk;$("#habMeal").checked=!!hab.meal;
+  proteinTarget();
+  renderMobility(s&&s.mobility);
+  setDay(s?s.day:suggestNext(), s&&s.exercises);
+  glucoseCheck();cardioTotal();
+  const en=$("#editingNote");en.hidden=!s;if(s)en.textContent="Editing the session from "+s.date+". Save overwrites it.";
+  const nu=$("#nextUp");
+  if(!s){const n=suggestNext();nu.hidden=false;nu.className="banner good";nu.textContent="Next in the rotation: Day "+n+" ("+DAYS[n].name+"). Switch it if your body says otherwise."}else nu.hidden=true;
+  window.scrollTo({top:0});
+}
+function collect(){
+  const id=editingId||($("#sDate").value||todayStr())+"-"+Math.random().toString(36).slice(2,7);
+  return {id, date:$("#sDate").value||todayStr(), day:currentDay,
+    gPre:num("#gPre"), gPost:num("#gPost"), bw:num("#bw"), sauna:num("#sauna"), steam:num("#steam"),
+    bike:num("#bike"), stair:num("#stair"), tread:num("#tread"), other:num("#other"), bikeType:$("#bikeType").value, rpe:num("#rpe"), level:$("#level").value.trim(),
+    mobility:MOBILITY.map((m,i)=>$("#mob"+i).checked), exercises:readSets(), notes:$("#notes").value.trim(),
+    habits:{protein:$("#habProtein").checked, walk:$("#habWalk").checked, meal:$("#habMeal").checked}, savedAt:new Date().toISOString()};
+}
+async function save(){
+  const s=collect();
+  const i=sessions.findIndex(x=>x.id===s.id);if(i>=0)sessions[i]=s;else sessions.push(s);
+  lsSave();
+  $("#saveBtn").disabled=true;
+  toast("Saved");
+  $("#saveBtn").disabled=false;
+  fillForm(null);renderHistory();renderProgress();
+}
+async function remove(id){
+  sessions=sessions.filter(s=>s.id!==id);lsSave();
+  renderHistory();renderProgress();if(editingId===id)fillForm(null);toast("Deleted");
+}
+
+// ---------- HISTORY ----------
+function cardioMin(s){return (s.bike||0)+(s.stair||0)+(s.tread||0)+(s.other||0)}
+function weekKey(d){const x=new Date(d+"T12:00:00");const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return x.toISOString().slice(0,10)}
+function renderHistory(){
+  const list=[...sessions].sort((a,b)=>a.date<b.date?1:-1);
+  $("#histEmpty").hidden=list.length>0;
+  const thisWeek=weekKey(todayStr());
+  const wk=sessions.filter(s=>weekKey(s.date)===thisWeek);
+  $("#stats").innerHTML=`<div><b>${wk.length}</b><span>sessions this week</span></div><div><b>${wk.reduce((a,s)=>a+cardioMin(s),0)}</b><span>cardio min this week</span></div><div><b>${sessions.length}</b><span>total sessions</span></div>`;
+  $("#histList").innerHTML=list.map(s=>{
+    const d=new Date(s.date+"T12:00:00");
+    const lifts=Object.entries(s.exercises||{}).filter(([n,st])=>st.some(x=>x.w!=null||x.r!=null)).length;
+    const g=s.gPre!=null||s.gPost!=null?` · glucose <b class="gl">${s.gPre??"?"} → ${s.gPost??"?"}</b>`:"";
+    return `<div class="hrow"><div class="d">${d.getDate()}<small>${d.toLocaleString("en-US",{month:"short"})}</small></div><div class="grow"><div><b>Day ${s.day}</b> · ${DAYS[s.day]?DAYS[s.day].name:""}</div><div class="m">${lifts} lifts · cardio <b>${cardioMin(s)} min</b>${g}${s.bw?` · <b>${s.bw} lb</b>`:""}</div>${s.notes?`<div class="note">${escapeHtml(s.notes)}</div>`:""}</div><div class="row" style="flex-direction:column;gap:4px"><button type="button" class="small" data-edit="${s.id}">Edit</button><button type="button" class="small ghost" data-del="${s.id}">Delete</button></div></div>`;
+  }).join("");
+}
+function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+// ---------- PROGRESS (hand-drawn SVG) ----------
+function lineChart(svg, series, opts={}){
+  const W=360,H=180,L=36,R=10,T=12,B=26;svg.innerHTML="";
+  const all=series.flatMap(s=>s.pts);
+  if(!all.length){svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle">Log a few sessions to see this chart</text>`;return}
+  const xs=[...new Set(all.map(p=>p.x))].sort();
+  let lo=Math.min(...all.map(p=>p.y),opts.target??Infinity), hi=Math.max(...all.map(p=>p.y),opts.target??-Infinity);
+  if(opts.zero)lo=0; if(hi===lo){hi+=10;lo=Math.max(0,lo-10)} const pad=(hi-lo)*.1;lo=opts.zero?0:lo-pad;hi+=pad;
+  const X=i=>L+(xs.length===1?(W-L-R)/2:i*(W-L-R)/(xs.length-1)), Y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  let g="";
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;const y=Y(v);g+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y}" y2="${y}"/><text x="${L-4}" y="${y+4}" text-anchor="end">${Math.round(v)}</text>`}
+  const step=Math.max(1,Math.ceil(xs.length/5));
+  xs.forEach((x,i)=>{if(i%step===0||i===xs.length-1)g+=`<text x="${X(i)}" y="${H-8}" text-anchor="middle">${x.slice(5)}</text>`});
+  if(opts.target!=null)g+=`<line class="target" x1="${L}" x2="${W-R}" y1="${Y(opts.target)}" y2="${Y(opts.target)}"/>`;
+  series.forEach((s,si)=>{
+    const pts=s.pts.map(p=>[X(xs.indexOf(p.x)),Y(p.y)]);
+    if(opts.bars){const bw=Math.max(6,(W-L-R)/xs.length*.6);pts.forEach(([x,y])=>g+=`<rect class="bar" x="${x-bw/2}" y="${y}" width="${bw}" height="${H-B-y}" rx="2"/>`);return}
+    const d=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+    if(si===0&&pts.length>1)g+=`<path class="a1" d="${d} L${pts[pts.length-1][0]} ${H-B} L${pts[0][0]} ${H-B} Z"/>`;
+    g+=`<path class="l${si+1}" d="${d}"/>`+pts.map(p=>`<circle class="p${si+1}" cx="${p[0]}" cy="${p[1]}" r="3.5"/>`).join("");
+  });
+  svg.innerHTML=g;
+}
+function renderProgress(){
+  const sorted=[...sessions].sort((a,b)=>a.date<b.date?-1:1);
+  const names=Object.keys(EX).filter(n=>sorted.some(s=>s.exercises&&s.exercises[n]&&s.exercises[n].some(x=>x.w!=null)));
+  const pick=$("#exPick");const cur=pick.value;
+  pick.innerHTML=(names.length?names:["Leg Press"]).map(n=>`<option ${n===cur?"selected":""}>${n}</option>`).join("");
+  const ex=pick.value;
+  lineChart($("#chExercise"),[{pts:sorted.filter(s=>s.exercises&&s.exercises[ex]).map(s=>({x:s.date,y:Math.max(...s.exercises[ex].map(x=>x.w??-1))})).filter(p=>p.y>=0)}]);
+  const weeks={};sorted.forEach(s=>{const k=weekKey(s.date);weeks[k]=(weeks[k]||0)+cardioMin(s)});
+  lineChart($("#chCardio"),[{pts:Object.keys(weeks).sort().map(k=>({x:k,y:weeks[k]}))}],{bars:true,zero:true,target:300});
+  lineChart($("#chGlucose"),[{pts:sorted.filter(s=>s.gPre!=null).map(s=>({x:s.date,y:s.gPre}))},{pts:sorted.filter(s=>s.gPost!=null).map(s=>({x:s.date,y:s.gPost}))}]);
+  lineChart($("#chWeight"),[{pts:sorted.filter(s=>s.bw!=null).map(s=>({x:s.date,y:s.bw}))}]);
+}
+
+// ---------- GUIDE ----------
+function renderGuide(){
+  $("#guideList").innerHTML=Object.entries(EX).map(([n,e])=>`<div class="ex"><div class="head"><div><div class="name">${n}</div><div class="target"><span class="pill accent">${e.d}</span> ${e.target}</div></div></div><p class="machine">${e.machine}</p><ul class="cues">${e.cues.map(c=>"<li>"+c+"</li>").join("")}</ul></div>`).join("");
+}
+
+// ---------- WIRING ----------
+$$("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{
+  $$("nav.tabs button").forEach(x=>x.setAttribute("aria-selected",x===b?"true":"false"));
+  $$(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+b.dataset.view));
+  if(b.dataset.view==="progress")renderProgress();window.scrollTo({top:0});
+}));
+$("#daySeg").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setDay(b.dataset.day,null)});
+$("#exList").addEventListener("click",e=>{const b=e.target.closest("button.done");if(b)b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true")});
+$("#gPre").addEventListener("input",glucoseCheck);
+$("#bw").addEventListener("input",proteinTarget);
+["bike","stair","tread","other"].forEach(k=>$("#"+k).addEventListener("input",cardioTotal));
+$("#saveBtn").addEventListener("click",save);
+$("#clearBtn").addEventListener("click",()=>fillForm(null));
+$("#histList").addEventListener("click",e=>{
+  const ed=e.target.closest("[data-edit]"),de=e.target.closest("[data-del]");
+  if(ed){const s=sessions.find(x=>x.id===ed.dataset.edit);fillForm(s);$$("nav.tabs button")[0].click()}
+  if(de){if(de.textContent==="Sure?")remove(de.dataset.del);else{de.textContent="Sure?";setTimeout(()=>de.textContent="Delete",2500)}}
+});
+$("#exPick").addEventListener("change",renderProgress);
+
+sessions=lsLoad();
+renderGuide();fillForm(null);renderHistory();renderProgress();
+$("#syncPill").textContent="this phone";
+
+// Local-only storage. Data lives on this phone; use Backup on the History tab.
+$("#syncPill").textContent="saved on phone";
+document.getElementById("exportBtn").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(sessions,null,1)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="training-log-backup-"+todayStr()+".json";document.body.appendChild(a);a.click();a.remove();
+});
+document.getElementById("importFile").addEventListener("change",e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const arr=JSON.parse(r.result);if(!Array.isArray(arr))throw 0;const map={};sessions.forEach(s=>map[s.id]=s);arr.forEach(s=>{if(s&&s.id)map[s.id]=s});sessions=Object.values(map);lsSave();renderHistory();renderProgress();fillForm(null);toast("Restored "+arr.length+" sessions")}catch(x){toast("That file is not a training log backup")}};
+  r.readAsText(f);e.target.value="";
+});
+if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").catch(()=>{})}
+function formDirty(){return ["gPre","bw","sauna","bike","stair","tread","other","gPost","steam","notes"].some(k=>$("#"+k).value.trim()!=="")||$$("#exList input[data-f=r]").some(i=>i.value!=="")}
+</script>
+
+</body>
+</html>

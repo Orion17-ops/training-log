@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
-<meta name="theme-color" content="#0f6e63">
+<meta name="theme-color" content="#ff5a1f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -14,144 +14,14 @@
 <link rel="icon" href="./icon-192.png">
 <style>html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>IB Training Log</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
-<style>
-/* Layout: a phone-first logbook. One sticky tab bar at the bottom, one scrolling column, cards only around the thing being filled in. */
-:root{
-  --bg:#f3f4f1; --surface:#ffffff; --fg:#17201f; --muted:#5f6b69; --line:#d9ddd9;
-  --accent:#0f6e63; --accent-ink:#ffffff; --accent-soft:#dcefeb;
-  --good:#2f7d32; --warn:#b26a00; --bad:#b3261e; --warn-soft:#fff2dc; --bad-soft:#fde6e4; --good-soft:#e3f2e1;
-  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
-  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
-}
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
-  --bg:#121816; --surface:#1b2321; --fg:#e8ebe8; --muted:#9aa5a2; --line:#2e3936;
-  --accent:#4fc3b2; --accent-ink:#0b1513; --accent-soft:#1d3a36;
-  --good:#7ed083; --warn:#f2b35b; --bad:#f08a82; --warn-soft:#3a2b10; --bad-soft:#3d1c19; --good-soft:#1c3320;
-  color-scheme:dark } }
-:root[data-theme="dark"]{
-  --bg:#121816; --surface:#1b2321; --fg:#e8ebe8; --muted:#9aa5a2; --line:#2e3936;
-  --accent:#4fc3b2; --accent-ink:#0b1513; --accent-soft:#1d3a36;
-  --good:#7ed083; --warn:#f2b35b; --bad:#f08a82; --warn-soft:#3a2b10; --bad-soft:#3d1c19; --good-soft:#1c3320;
-  color-scheme:dark }
-*{box-sizing:border-box}
-html,body{min-height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(120px + env(safe-area-inset-bottom,0px))}
-html{scroll-padding-bottom:120px}
-h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.05}
-h1{font-size:2rem;font-weight:700;letter-spacing:.01em}
-h2{font-size:1.5rem;font-weight:700}
-h3{font-size:1.15rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-p{margin:0}
-.wrap{max-width:640px;margin:0 auto}
-header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:18px 0 10px;border-bottom:2px solid var(--fg)}
-header.top .sub{color:var(--muted);font-size:.9rem}
-.view{display:none;padding-top:14px}
-.view.active{display:block}
-.stack{display:grid;gap:14px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
-.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.grow{flex:1;min-width:0}
-label{font-size:.85rem;color:var(--muted);font-weight:500;display:block;margin-bottom:4px}
-input[type=text],input[type=number],input[type=date],select,textarea{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-variant-numeric:tabular-nums}
-textarea{min-height:70px;resize:vertical}
-input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:10px 14px;font-weight:600}
-button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-button.small{padding:6px 10px;font-size:.85rem}
-button.ghost{background:transparent}
-button:disabled{opacity:.5;cursor:default}
-.seg{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
-.seg button{padding:10px 2px;font-family:var(--display);font-size:.95rem;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.check{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
-.check:first-of-type{border-top:0}
-.check input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--accent);flex:none}
-.check .t{font-weight:500}
-.check .d{color:var(--muted);font-size:.9rem}
-.ex{border-top:1px solid var(--line);padding:12px 0}
-.ex:first-of-type{border-top:0;padding-top:0}
-.ex .head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
-.ex .name{font-family:var(--display);font-size:1.25rem;font-weight:700}
-.ex .target{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
-.ex .last{font-size:.85rem;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
-.sets{display:grid;gap:6px;margin-top:8px}
-.set{display:grid;grid-template-columns:2.2rem 1fr auto 1fr auto;gap:6px;align-items:center}
-.set .n{font-family:var(--display);font-size:1.1rem;color:var(--muted);text-align:center}
-.set .x{color:var(--muted);font-size:.85rem}
-.set input{padding:8px 8px;text-align:center}
-.set .done{width:34px;height:38px;padding:0;font-size:1.1rem}
-.set .done[aria-pressed=true]{background:var(--good-soft);border-color:var(--good);color:var(--good)}
-details{margin-top:6px}
-summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:.9rem;list-style:none}
-summary::before{content:"+ ";font-weight:700}
-details[open] summary::before{content:"\2212 "}
-.cues{margin:6px 0 0;padding-left:18px;font-size:.92rem}
-.cues li{margin:3px 0}
-.machine{font-size:.92rem;color:var(--muted);margin-top:6px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;font-weight:600;border:1px solid var(--line);color:var(--muted);background:var(--bg)}
-.pill.good{background:var(--good-soft);color:var(--good);border-color:transparent}
-.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
-.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
-.pill.accent{background:var(--accent-soft);color:var(--accent);border-color:transparent}
-.note{font-size:.9rem;color:var(--muted)}
-.banner{border-radius:8px;padding:10px 12px;font-size:.92rem;background:var(--warn-soft);color:var(--fg);border-left:4px solid var(--warn)}
-.banner.good{background:var(--good-soft);border-left-color:var(--good)}
-.banner.bad{background:var(--bad-soft);border-left-color:var(--bad)}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20;max-width:90vw}
-.toast.show{opacity:1}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);
-  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-nav.tabs button{border:0;border-radius:0;background:transparent;padding:10px 4px 8px;font-family:var(--display);font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-top:3px solid transparent}
-nav.tabs button[aria-selected=true]{color:var(--accent);border-top-color:var(--accent)}
-/* history */
-.hist{display:grid;gap:8px}
-.hrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.hrow .d{font-family:var(--display);font-size:1.3rem;font-weight:700;width:3.2rem;text-align:center;line-height:1}
-.hrow .d small{display:block;font-size:.7rem;font-family:var(--body);color:var(--muted);text-transform:uppercase;font-weight:600}
-.hrow .m{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.hrow .m b{color:var(--fg)}
-/* charts */
-.chart{width:100%;height:auto;display:block}
-.chart text{font-family:var(--body);font-size:11px;fill:var(--muted)}
-.chart .grid{stroke:var(--line);stroke-width:1}
-.chart .l1{stroke:var(--accent);stroke-width:2.5;fill:none;stroke-linejoin:round}
-.chart .l2{stroke:var(--warn);stroke-width:2.5;fill:none;stroke-linejoin:round}
-.chart .a1{fill:var(--accent);opacity:.12}
-.chart .p1{fill:var(--accent)}
-.chart .p2{fill:var(--warn)}
-.chart .bar{fill:var(--accent)}
-.chart .target{stroke:var(--good);stroke-dasharray:4 4;stroke-width:1.5}
-.legend{display:flex;gap:14px;font-size:.85rem;color:var(--muted);margin-top:4px}
-.legend i{display:inline-block;width:12px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
-.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stat div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
-.stat b{display:block;font-family:var(--display);font-size:1.7rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
-.stat span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
-/* guide */
-.guide h2{margin-top:6px}
-.guide p,.guide li{max-width:65ch}
-.guide ul{padding-left:20px;margin:6px 0}
-.guide .week{display:grid;grid-template-columns:5.5rem 1fr;gap:8px 12px;font-size:.95rem}
-.guide .week b{font-family:var(--display);font-size:1.1rem}
-table{border-collapse:collapse;width:100%;font-size:.92rem}
-th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-.tscroll{overflow-x:auto}
-.gl{font-variant-numeric:tabular-nums}
-@media (prefers-reduced-motion:reduce){.toast{transition:none}}
-@media (max-width:420px){.g3{grid-template-columns:1fr 1fr}.set{grid-template-columns:2rem 1fr auto 1fr auto}}
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Manrope:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="./style.css">
 
 </head>
 <body>
 <div class="wrap">
 <header class="top">
-  <div><h1>IB Training Log</h1><div class="sub">Life Time Crosstown · 5 days a week · sauna, lift, ride, steam</div></div>
+  <div><h1>IB Training Log</h1><div class="sub">Life Time Crosstown · 5 days · sauna, lift, ride, steam</div></div>
   <span class="pill" id="syncPill">loading</span>
 </header>
 
@@ -164,11 +34,11 @@ th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mu
         <input type="date" id="sDate" style="width:auto">
       </div>
       <div style="margin-top:10px" class="seg" id="daySeg">
-        <button type="button" data-day="A" aria-pressed="true">A · Chest+Arms</button>
-        <button type="button" data-day="B" aria-pressed="false">B · Legs</button>
-        <button type="button" data-day="C" aria-pressed="false">C · Back</button>
-        <button type="button" data-day="D" aria-pressed="false">D · Shoulders</button>
-        <button type="button" data-day="E" aria-pressed="false">E · Legs 2</button>
+        <button type="button" data-day="A" aria-pressed="true"><b>A</b><span>Chest</span></button>
+        <button type="button" data-day="B" aria-pressed="false"><b>B</b><span>Legs</span></button>
+        <button type="button" data-day="C" aria-pressed="false"><b>C</b><span>Back</span></button>
+        <button type="button" data-day="D" aria-pressed="false"><b>D</b><span>Shoulders</span></button>
+        <button type="button" data-day="E" aria-pressed="false"><b>E</b><span>Legs 2</span></button>
       </div>
       <p class="note" id="dayNote" style="margin-top:8px"></p>
       <div class="banner" id="nextUp" style="margin-top:10px" hidden></div>
@@ -225,7 +95,7 @@ th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mu
     <div class="card">
       <h3>Daily habits from the research</h3>
       <p class="note" style="margin:4px 0 6px">These two did as much in the trials as the workouts did. Tick them off today, gym day or not.</p>
-      <label class="check"><input type="checkbox" id="habProtein"><span><span class="t">Protein target hit (<span id="protTarget">about 150 g</span>)</span><br><span class="d">About 1.6 g per kg of body weight, spread over 3 to 4 meals, food first. Updates from the body weight you enter above.</span></span></label>
+      <label class="check"><input type="checkbox" id="habProtein"><span><span class="t">Protein target hit (<span id="protTarget">about 150 g</span>)</span><br><span class="d">About 0.73 g per pound of body weight, spread over 3 to 4 meals, food first. Updates from the body weight you enter above.</span></span></label>
       <label class="check"><input type="checkbox" id="habWalk"><span><span class="t">15 minute walk after the biggest meal</span><br><span class="d">The ADA's after-meal walk. On gym days it is optional; on off days it is the whole job.</span></span></label>
       <label class="check"><input type="checkbox" id="habMeal"><span><span class="t">Protein meal within an hour after training</span><br><span class="d">Blunts the delayed glucose drop and feeds the muscle you just worked.</span></span></label>
     </div>
@@ -391,12 +261,12 @@ th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mu
       <h2>What the research says for you</h2>
       <p style="margin-top:8px">A 38 year old man with type 2 diabetes who wants to lose the love handles and build lean, functional muscle. Here is what the strongest studies found, and what each one changes in this plan.</p>
       <ul style="margin-top:8px">
-        <li><b>Do both weights and cardio; neither alone is enough.</b> In the DARE trial (251 adults with type 2 diabetes, 26 weeks), aerobic alone and weights alone each cut HbA1c about 0.5 points; doing both cut it 0.97. HART-D (262 adults, 9 months) found the same: only the combined group had a significant HbA1c drop, and it also lost the most waist (2.8 cm) and fat mass (1.7 kg). This is why every session here has lifts and a cardio hour.</li>
+        <li><b>Do both weights and cardio; neither alone is enough.</b> In the DARE trial (251 adults with type 2 diabetes, 26 weeks), aerobic alone and weights alone each cut HbA1c about 0.5 points; doing both cut it 0.97. HART-D (262 adults, 9 months) found the same: only the combined group had a significant HbA1c drop, and it also lost the most waist (1.1 inches) and fat mass (3.7 lb). This is why every session here has lifts and a cardio hour.</li>
         <li><b>The ADA's dose.</b> At least 150 minutes a week of moderate to vigorous aerobic work on 3 or more days with no more than 2 days off in a row, plus resistance training 2 to 3 days a week on non-consecutive days, 8 to 10 exercises, 1 to 3 sets of 10 to 15 reps to near fatigue, adding load only once you consistently beat the target reps. Five sessions of 60 minutes puts you at 300 minutes, and the five-day rotation gives each muscle its 48 hours. The 15 minute walk after meals is a checkbox on the Today tab for the weekend.</li>
         <li><b>Love handles cannot be targeted.</b> A six week trial of 7 ab exercises, 5 days a week, improved curl-up endurance and changed abdominal fat by nothing. The core work here is for your weak core and your back, not for the fat on top of it. That fat comes off through total calorie balance and the cardio volume.</li>
         <li><b>For the deep belly fat, cardio does the heavy lifting.</b> Two meta-analyses (35 trials in the general population; 24 trials in type 2 diabetes) found aerobic exercise reduces visceral fat and resistance training alone does not. So the bike hour stays even after the lifting gets fun.</li>
-        <li><b>Weights are what change the shape.</b> In HART-D the resistance and combined groups lost 1.4 and 1.7 kg of fat mass; aerobic alone lost 0.6 and was not different from control. Lifting is what keeps muscle while fat comes off, which is the difference between lean and just lighter.</li>
-        <li><b>Protein.</b> A meta-analysis of 49 trials found muscle and strength gains from lifting rise with protein intake up to about 1.6 g per kg of body weight a day, then plateau. For a 210 lb (95 kg) man that is roughly 150 g a day, spread across meals, from food first. Ask your clinic if you have any kidney concern; otherwise this is a normal intake for someone lifting.</li>
+        <li><b>Weights are what change the shape.</b> In HART-D the resistance and combined groups lost 3.1 and 3.7 lb of fat mass; aerobic alone lost 1.3 lb and was not different from control. Lifting is what keeps muscle while fat comes off, which is the difference between lean and just lighter.</li>
+        <li><b>Protein.</b> A meta-analysis of 49 trials found muscle and strength gains from lifting rise with protein intake up to about 0.73 g per pound of body weight a day, then plateau. For a 210 lb man that is roughly 150 g a day, spread across meals, from food first. Ask your clinic if you have any kidney concern; otherwise this is a normal intake for someone lifting.</li>
         <li><b>Hypoglycemia timing.</b> Lows after exercise usually show up 6 to 15 hours later and can occur up to 48 hours out. Lifting before cardio (the order used here) helps blunt the drop. Exercising with high glucose and ketones is not recommended.</li>
       </ul>
       <p class="note" style="margin-top:8px">Sources: Sigal et al., Annals of Internal Medicine 2007 (DARE); Church et al., JAMA 2010 (HART-D); Colberg et al., Diabetes Care 2016 (ADA position statement); Vispute et al., J Strength Cond Res 2011; Ismail et al., Obesity Reviews 2012; Sabag et al., Diabetes and Metabolism 2017; Morton et al., Br J Sports Med 2018.</p>
@@ -411,14 +281,15 @@ th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mu
 </section>
 </div>
 
-<nav class="tabs" role="tablist">
+<nav class="tabs"><div class="bar" role="tablist">
   <button type="button" role="tab" aria-selected="true" data-view="today">Today</button>
   <button type="button" role="tab" aria-selected="false" data-view="history">History</button>
   <button type="button" role="tab" aria-selected="false" data-view="progress">Progress</button>
   <button type="button" role="tab" aria-selected="false" data-view="guide">Guide</button>
-</nav>
+</div></nav>
 <div class="toast" id="toast" role="status"></div>
 
+<script src="./pics.js"></script>
 <script src="./app.js"></script>
 
 </body>

@@ -209,7 +209,7 @@ function renderExercises(day, data){
       const done=prev&&prev[k]&&prev[k].done;
       return `<div class="set"><span class="n">${k+1}</span><input type="number" inputmode="decimal" step="0.5" placeholder="lb" aria-label="${name} set ${k+1} weight" data-ex="${name}" data-k="${k}" data-f="w" value="${w}"><span class="x">×</span><input type="number" inputmode="numeric" placeholder="${e.timed?"sec":"reps"}" aria-label="${name} set ${k+1} reps" data-ex="${name}" data-k="${k}" data-f="r" value="${r}"><button type="button" class="done" aria-pressed="${done?"true":"false"}" data-ex="${name}" data-k="${k}" aria-label="mark set done">✓</button></div>`;
     }).join("");
-    return `<div class="ex"><div class="head"><div><div class="name">${i+1}. ${name}</div><div class="target">${e.target} · add ${e.inc} when you own the top of the range</div></div><div class="last">${last?"Last: "+fmtSets(last.sets):"First time"}</div></div>
+    return `<div class="ex"><div class="head"><div class="pic">${picFor(name)}</div><div class="grow"><div class="name">${i+1}. ${name}</div><div class="target">${e.target} · add ${e.inc} when you own the top of the range</div><div class="last">${last?"Last: "+fmtSets(last.sets):"First time"}</div><a class="find" href="${searchFor(name)}" target="_blank" rel="noopener">See photos</a></div></div>
       <div class="sets">${sets}</div>
       <details><summary>Machine and form cues</summary><p class="machine">${e.machine}</p><ul class="cues">${e.cues.map(c=>"<li>"+c+"</li>").join("")}</ul></details></div>`;
   }).join("");
@@ -343,7 +343,7 @@ function renderProgress(){
 
 // ---------- GUIDE ----------
 function renderGuide(){
-  $("#guideList").innerHTML=Object.entries(EX).map(([n,e])=>`<div class="ex"><div class="head"><div><div class="name">${n}</div><div class="target"><span class="pill accent">${e.d}</span> ${e.target}</div></div></div><p class="machine">${e.machine}</p><ul class="cues">${e.cues.map(c=>"<li>"+c+"</li>").join("")}</ul></div>`).join("");
+  $("#guideList").innerHTML=Object.entries(EX).map(([n,e])=>`<div class="ex"><div class="head"><div class="pic">${picFor(n)}</div><div class="grow"><div class="name">${n}</div><div class="target"><span class="pill accent">${e.d}</span> ${e.target}</div><a class="find" href="${searchFor(n)}" target="_blank" rel="noopener">See photos</a></div></div><p class="machine">${e.machine}</p><ul class="cues">${e.cues.map(c=>"<li>"+c+"</li>").join("")}</ul></div>`).join("");
 }
 
 // ---------- WIRING ----------

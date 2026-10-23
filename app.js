@@ -309,7 +309,7 @@ function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">
 function lineChart(svg, series, opts={}){
   const W=360,H=180,L=36,R=10,T=12,B=26;svg.innerHTML="";
   const all=series.flatMap(s=>s.pts);
-  if(!all.length){svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle">Log a few sessions to see this chart</text>`;return}
+  if(!all.length){svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle">No weights logged for this lift yet</text>`;return}
   const xs=[...new Set(all.map(p=>p.x))].sort();
   let lo=Math.min(...all.map(p=>p.y),opts.target??Infinity), hi=Math.max(...all.map(p=>p.y),opts.target??-Infinity);
   if(opts.zero)lo=0; if(hi===lo){hi+=10;lo=Math.max(0,lo-10)} const pad=(hi-lo)*.1;lo=opts.zero?0:lo-pad;hi+=pad;
@@ -332,7 +332,10 @@ function renderProgress(){
   const sorted=[...sessions].sort((a,b)=>a.date<b.date?-1:1);
   const names=Object.keys(EX).filter(n=>sorted.some(s=>s.exercises&&s.exercises[n]&&s.exercises[n].some(x=>x.w!=null)));
   const pick=$("#exPick");const cur=pick.value;
-  pick.innerHTML=(names.length?names:["Leg Press"]).map(n=>`<option ${n===cur?"selected":""}>${n}</option>`).join("");
+  const rest=Object.keys(EX).filter(n=>!names.includes(n));
+  const opt=n=>`<option ${n===cur?"selected":""}>${n}</option>`;
+  pick.innerHTML=(names.length?`<optgroup label="Logged">${names.map(opt).join("")}</optgroup>`:"")+`<optgroup label="${names.length?"Not logged yet":"All exercises"}">${rest.map(opt).join("")}</optgroup>`;
+  if(!cur||!EX[cur])pick.value=names[0]||"Leg Press";
   const ex=pick.value;
   lineChart($("#chExercise"),[{pts:sorted.filter(s=>s.exercises&&s.exercises[ex]).map(s=>({x:s.date,y:Math.max(...s.exercises[ex].map(x=>x.w??-1))})).filter(p=>p.y>=0)}]);
   const weeks={};sorted.forEach(s=>{const k=weekKey(s.date);weeks[k]=(weeks[k]||0)+cardioMin(s)});
